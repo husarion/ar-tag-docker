@@ -1,18 +1,36 @@
 services:
 
   rviz:
-    image: husarion/rviz2:humble
+    # image: husarion/rviz2:humble
+    image: husarion/rviz:noetic
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ./default.rviz:/root/.rviz2/default.rviz
+      # - ./default.rviz:/root/.rviz2/default.rviz
+      - ./default.rviz:/opt/ros/noetic/share/rviz/default.rviz
     environment:
       - DISPLAY
       - LIBGL_ALWAYS_SOFTWARE=1
+      - ROS_MASTER_URI=http://ros-master:11311
+
   astra:
-    image: husarion/astra:humble
+    # image: husarion/astra:humble
+    image: husarion/astra:melodic
     devices:
       - /dev/bus/usb/
-    command: ros2 launch astra_camera astra_mini.launch.py
+    environment:
+      - ROS_MASTER_URI=http://ros-master:11311
+    # command: ros2 launch astra_camera astra_mini.launch.py
+    command: roslaunch astra_camera astra.launch
+
+  bridge:
+    image: ros:galactic-ros1-bridge
+    volumes:
+      - ./bridge.yaml:/bridge.yaml
+    environment:
+      - ROS_MASTER_URI=http://ros-master:11311
+    command: bash -c "rosparam load /bridge.yaml && ros2 run ros1_bridge parameter_bridge"
+    # command: ros2 run ros1_bridge dynamic_bridge
+    # command: sleep 3600
 
   ros-master:
     image: ros:noetic-ros-core
@@ -29,4 +47,13 @@ services:
     environment:
       - ROS_MASTER_URI=http://ros-master:11311
     # command: rosrun ar_track_alvar individualMarkers _marker_size:=5.0 _camera_image:=/camera/image_raw --wait
-    command: sleep 3600
+    command: >
+      rosrun ar_track_alvar individualMarkers 
+        _marker_size:=12.0
+        _max_new_marker_error:=0.20
+        _max_track_error:=0.2
+        _max_frequency:=8.0
+        _cam_image_topic:=/camera/color/image_raw
+        _cam_info_topic:=/camera/color/camera_info
+        _output_frame:=camera_link
+    # command: sleep 3600
