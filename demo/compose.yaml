@@ -1,0 +1,32 @@
+services:
+
+  rviz:
+    image: husarion/rviz2:humble
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ./default.rviz:/root/.rviz2/default.rviz
+    environment:
+      - DISPLAY
+      - LIBGL_ALWAYS_SOFTWARE=1
+  astra:
+    image: husarion/astra:humble
+    devices:
+      - /dev/bus/usb/
+    command: ros2 launch astra_camera astra_mini.launch.py
+
+  ros-master:
+    image: ros:noetic-ros-core
+    tty: true 
+    command: stdbuf -o L roscore
+
+  ar-tag:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    tty: true
+    volumes:
+      - ./ar_tag:/ar_tag
+    environment:
+      - ROS_MASTER_URI=http://ros-master:11311
+    # command: rosrun ar_track_alvar individualMarkers _marker_size:=5.0 _camera_image:=/camera/image_raw --wait
+    command: sleep 3600
